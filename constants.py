@@ -1,0 +1,2 @@
+lodgings = "lodgings"
+guests = "guests"
