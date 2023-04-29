@@ -1,2 +1,2 @@
-lodgings = "lodgings"
-guests = "guests"
+boats = "boats"
+loads = "loads"
