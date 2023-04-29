@@ -56,7 +56,7 @@ def boats_get_post():
     else:
         return 'Method not recogonized'
 
-@bp.route('/<id>', methods=['PUT','DELETE', "GET"])
+@bp.route('/<id>', methods=['PUT','DELETE', 'GET'])
 def boats_put_delete(id):
     if request.method == 'PUT':
         content = request.get_json()
