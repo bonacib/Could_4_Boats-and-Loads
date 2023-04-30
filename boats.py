@@ -64,12 +64,21 @@ def boats_put_delete(id):
         # client.put(boat)
         # return ('',200)
     elif request.method == 'DELETE':
-        key = client.key(constants.boats, int(id))
+        #THIS NEEDS WORK - THIS IS WHERE YOU LEFT OFF
+        boat_key = client.key(constants.boats, int(id))
+        boat = client.get(key=boat_key)
         #and unload any loads assiciated
-        # loads_on_boat = boat["loads"]
-        # print(loads_on_boat)
+        print("BOAT", boat, "BOAT LOADS", boat['loads'])
+        if len(boat['loads']) != 0:
+            for item in boat['loads']:
+                print("load #", item)
+                load_key = item.id
+                load = client.get(key=load_key)
+                load['carrier'] = None
+                client.put(load)        
 
-        client.delete(key)
+        # delete boat
+        client.delete(boat_key)
         return ('',200)
     elif request.method == 'GET':
         boat_key = client.key(constants.boats, int(id))
@@ -88,7 +97,6 @@ def boats_put_delete(id):
 @bp.route('/<bid>/loads/<lid>', methods=['PUT','DELETE'])
 def add_delete_reservation(bid,lid):
     if request.method == 'PUT':
-        print("enter PUT LOAD ON BOAT")
         boat_key = client.key(constants.boats, int(bid))
         load_key = client.key(constants.loads, int(lid))
 
@@ -109,22 +117,40 @@ def add_delete_reservation(bid,lid):
         boat['loads'].append({"id":load.id, "self": http + "/loads/" + str(load.id)})
 
         client.put(boat)
-        print("put BOAT", boat)
 
         #update the load with the carrier
         load['carrier'] = ({ "id" : str(boat.id), "name": boat["name"], "self": http + "/boats/" + str(boat.id)})
-        print("THIS IS THE AFTER LOAD['Carrier']", load['carrier'])
         client.put(load)
-        print("load", load)
 
         return('',204)
     if request.method == 'DELETE':
+        #get Keys
         boat_key = client.key(constants.boats, int(bid))
+        load_key = client.key(constants.loads, int(lid))
+
+        #check if boat and load exist
+        if client.get(key=boat_key) == None or client.get(key=load_key) == None:
+            return (json.dumps({"Error" : "No boat with this boat_id is loaded with the load with this load_id"}), 404)
+        
+        
+        load = client.get(key=load_key)
+        #check if load is already removed
+        if load['carrier'] == None:
+            return (json.dumps({"Error" : "No boat with this boat_id is loaded with the load with this load_id"}), 404)
+        
+        #find the carrier boat
         boat = client.get(key=boat_key)
-        if 'loads' in boat.keys():
-            boat['loads'].remove(int(lid))
-            client.put(boat)
-        return('',200)
+        
+        print("boat loads before removal", boat['loads'])
+        boat['loads'].remove({"id":load.id, "self": http + "/loads/" + str(load.id)})
+        print("boat loads after removal", boat['loads'])
+
+        client.put(boat)
+
+        #update the load to have no carrier
+        load['carrier'] = None
+        client.put(load)
+        return('',204)
 
 @bp.route('/<id>/loads', methods=['GET'])
 def get_reservations(id):
