@@ -79,7 +79,7 @@ def loads_put_delete(id):
         if client.get(key=load_key) == None:
             return (json.dumps({"Error" : "No load with this load_id exists"}), 404)
         load = client.get(key=load_key)
-        load_dict = {"id" : load.key.id, "volume": load["volume"], "carrier": None, "item": load["item"], 
+        load_dict = {"id" : load.key.id, "volume": load["volume"], "carrier": load["carrier"], "item": load["item"], 
                         "creation_date": load["creation_date"], "self": load["self"]}
         return (json.dumps(load_dict),200)
     else:

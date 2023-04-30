@@ -13,8 +13,6 @@ bp = Blueprint('boat', __name__, url_prefix='/boats')
 def boats_get_post():
     if request.method == 'POST':
         content = request.get_json()    
-        #make new entity - make a new key and provide type of key (this is a string of boats keys)
-        #inspect jsons for name, type, length,
         if len(content) < 3:
             return (json.dumps({"Error" : "The request object is missing at least one of the required attributes"}),400)
         
@@ -59,14 +57,18 @@ def boats_get_post():
 def boats_put_delete(id):
     if request.method == 'PUT':
         content = request.get_json()
-        boat_key = client.key(constants.boats, int(id))
-        boat = client.get(key=boat_key)
-        boat.update({"name": content["name"], "description": content["description"],
-          "price": content["price"]})
-        client.put(boat)
-        return ('',200)
+        # boat_key = client.key(constants.boats, int(id))
+        # boat = client.get(key=boat_key)
+        # boat.update({"name": content["name"], "description": content["description"],
+        #   "price": content["price"]})
+        # client.put(boat)
+        # return ('',200)
     elif request.method == 'DELETE':
         key = client.key(constants.boats, int(id))
+        #and unload any loads assiciated
+        # loads_on_boat = boat["loads"]
+        # print(loads_on_boat)
+
         client.delete(key)
         return ('',200)
     elif request.method == 'GET':
@@ -86,35 +88,33 @@ def boats_put_delete(id):
 @bp.route('/<bid>/loads/<lid>', methods=['PUT','DELETE'])
 def add_delete_reservation(bid,lid):
     if request.method == 'PUT':
-        print("enter PUT")
+        print("enter PUT LOAD ON BOAT")
         boat_key = client.key(constants.boats, int(bid))
-        if client.get(key=boat_key) == None:
+        load_key = client.key(constants.loads, int(lid))
+
+        #check if boat and load exist
+        if client.get(key=boat_key) == None or client.get(key=load_key) == None:
             return (json.dumps({"Error" : "The specified boat and/or load does not exist"}), 404)
         
-        load_key = client.key(constants.loads, int(lid))
-        if client.get(key=load_key) == None:
-            return (json.dumps({"Error" : "The specified boat and/or load does not exist"}), 404)
         
         load = client.get(key=load_key)
         #check if load is already else where
-        if load["carrier"] != None:
+        if load['carrier'] != None:
             return (json.dumps({"Error" : "The load is already loaded on another boat"}), 403)
         
-        boat_key = client.key(constants.boats, int(bid))
+        #load not on other boat
+        #get the boat
         boat = client.get(key=boat_key)
         
-        print("adding Loads")
-        if 'loads' in boat.keys():
-            print("append")
-            boat['loads'].append({"id":load.id, "self": http + "/loads/" + str(load.id)})
-            print("boat after append", boat)
+        boat['loads'].append({"id":load.id, "self": http + "/loads/" + str(load.id)})
 
         client.put(boat)
         print("put BOAT", boat)
 
         #update the load with the carrier
-        load["carrier"] = { "id" : boat_key, "name": boat["name"], "self": http + "/boats/" + str(boat.id)}
-        client.put("updated load", load)
+        load['carrier'] = ({ "id" : str(boat.id), "name": boat["name"], "self": http + "/boats/" + str(boat.id)})
+        print("THIS IS THE AFTER LOAD['Carrier']", load['carrier'])
+        client.put(load)
         print("load", load)
 
         return('',204)
