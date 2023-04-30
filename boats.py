@@ -26,7 +26,7 @@ def boats_get_post():
         client.put(new_boat)
 
         #update entry with self - need ID for self so this has to be done 2 times
-        new_boat.update({"name": content["name"], "type": content["type"], "length": content["length"], 
+        new_boat.update({"id" : new_boat.key.id, "name": content["name"], "type": content["type"], "length": content["length"], 
                     "loads": [], "self": http + "/boats/" + str(new_boat.key.id)})  
         client.put(new_boat)
         #make a dictionary to return the results in the body neatly
@@ -86,6 +86,7 @@ def boats_put_delete(id):
 @bp.route('/<bid>/loads/<lid>', methods=['PUT','DELETE'])
 def add_delete_reservation(bid,lid):
     if request.method == 'PUT':
+        print("enter PUT")
         boat_key = client.key(constants.boats, int(bid))
         if client.get(key=boat_key) == None:
             return (json.dumps({"Error" : "The specified boat and/or load does not exist"}), 404)
@@ -102,17 +103,19 @@ def add_delete_reservation(bid,lid):
         boat_key = client.key(constants.boats, int(bid))
         boat = client.get(key=boat_key)
         
-        
+        print("adding Loads")
         if 'loads' in boat.keys():
-            boat['loads'].append(load.id)
-        else:
-            boat['loads'] = [load.id]
+            print("append")
+            boat['loads'].append({"id":load.id, "self": http + "/loads/" + str(load.id)})
+            print("boat after append", boat)
+
         client.put(boat)
+        print("put BOAT", boat)
 
         #update the load with the carrier
-        load["carrier"] = boat_key
-        print("new load with added carrier" , load)
-        client.put(load)
+        load["carrier"] = { "id" : boat_key, "name": boat["name"], "self": http + "/boats/" + str(boat.id)}
+        client.put("updated load", load)
+        print("load", load)
 
         return('',204)
     if request.method == 'DELETE':
