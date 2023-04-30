@@ -22,14 +22,13 @@ def boats_get_post():
         #define new boat based on content passed in
         new_boat.update({"name": content["name"], "type": content["type"], "length": content["length"], 
                         "loads": [], "self": http + "/boats/"})
-
         #put new boat entity into databse
         client.put(new_boat)
 
+        #update entry with self - need ID for self so this has to be done 2 times
         new_boat.update({"name": content["name"], "type": content["type"], "length": content["length"], 
-                    "loads": [], "self": http + "/boats/" + str(new_boat.key.id)})
-        
-        print(new_boat)
+                    "loads": [], "self": http + "/boats/" + str(new_boat.key.id)})  
+        client.put(new_boat)
         #make a dictionary to return the results in the body neatly
         boat_dict = {"id" : new_boat.key.id, "name" : new_boat["name"], "type" : new_boat["type"], 
                      "length" : new_boat["length"], "loads" : new_boat["loads"], 
@@ -76,29 +75,51 @@ def boats_put_delete(id):
         if client.get(key=boat_key) == None:
             return (json.dumps({"Error" : "No boat with this boat_id exists"}), 404)
         boat = client.get(key=boat_key)
-        boat_dict = {"id" : boat.key.id, "name" : boat["name"], "type" : boat["type"], "length" : boat["length"]}
+        boat_dict = {"id" : boat.key.id, "name" : boat["name"], "type" : boat["type"], 
+                     "length" : boat["length"], "loads" : boat["loads"], 
+                     "self": boat["self"]}
+        print("this is the boat", boat, "this is the boat dict", boat_dict)
         return (json.dumps(boat_dict),200)
     else:
         return 'Method not recogonized'
 
-@bp.route('/<lid>/loads/<gid>', methods=['PUT','DELETE'])
-def add_delete_reservation(lid,gid):
+@bp.route('/<bid>/loads/<lid>', methods=['PUT','DELETE'])
+def add_delete_reservation(bid,lid):
     if request.method == 'PUT':
-        boat_key = client.key(constants.boats, int(lid))
-        boat = client.get(key=boat_key)
-        load_key = client.key(constants.loads, int(gid))
+        boat_key = client.key(constants.boats, int(bid))
+        if client.get(key=boat_key) == None:
+            return (json.dumps({"Error" : "The specified boat and/or load does not exist"}), 404)
+        
+        load_key = client.key(constants.loads, int(lid))
+        if client.get(key=load_key) == None:
+            return (json.dumps({"Error" : "The specified boat and/or load does not exist"}), 404)
+        
         load = client.get(key=load_key)
+        #check if load is already else where
+        if load["carrier"] != None:
+            return (json.dumps({"Error" : "The load is already loaded on another boat"}), 403)
+        
+        boat_key = client.key(constants.boats, int(bid))
+        boat = client.get(key=boat_key)
+        
+        
         if 'loads' in boat.keys():
             boat['loads'].append(load.id)
         else:
             boat['loads'] = [load.id]
         client.put(boat)
-        return('',200)
+
+        #update the load with the carrier
+        load["carrier"] = boat_key
+        print("new load with added carrier" , load)
+        client.put(load)
+
+        return('',204)
     if request.method == 'DELETE':
-        boat_key = client.key(constants.boats, int(lid))
+        boat_key = client.key(constants.boats, int(bid))
         boat = client.get(key=boat_key)
         if 'loads' in boat.keys():
-            boat['loads'].remove(int(gid))
+            boat['loads'].remove(int(lid))
             client.put(boat)
         return('',200)
 
