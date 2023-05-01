@@ -64,22 +64,23 @@ def boats_put_delete(id):
         # client.put(boat)
         # return ('',200)
     elif request.method == 'DELETE':
-        #THIS NEEDS WORK - THIS IS WHERE YOU LEFT OFF
         boat_key = client.key(constants.boats, int(id))
+        if client.get(key=boat_key) == None:
+            return (json.dumps({"Error" : "No boat with this boat_id exists"}), 404)
+        #THIS NEEDS WORK - THIS IS WHERE YOU LEFT OFF
+        
         boat = client.get(key=boat_key)
         #and unload any loads assiciated
-        print("BOAT", boat, "BOAT LOADS", boat['loads'])
-        if len(boat['loads']) != 0:
-            for item in boat['loads']:
-                print("load #", item)
-                load_key = item.id
-                load = client.get(key=load_key)
-                load['carrier'] = None
-                client.put(load)        
+        for item in boat['loads']:
+            item_id = item["id"]
+            load_key = client.key(constants.loads, int(item_id))
+            load = client.get(key=load_key)
+            load['carrier'] = None
+            client.put(load)        
 
         # delete boat
         client.delete(boat_key)
-        return ('',200)
+        return ('',204)
     elif request.method == 'GET':
         boat_key = client.key(constants.boats, int(id))
         #is the ID real?

@@ -70,9 +70,28 @@ def loads_put_delete(id):
         client.put(load)
         return ('',200)
     elif request.method == 'DELETE':
-        key = client.key(constants.loads, int(id))
-        client.delete(key)
-        return ('',200)
+        load_key = client.key(constants.loads, int(id))
+        if client.get(key=load_key) == None:
+            return (json.dumps({"Error" : "No load with this load_id exists"}), 404)
+        load = client.get(key=load_key)
+
+        #remove load from boat
+        boat_id = load["carrier"]["id"]
+        print("Boat ID", boat_id)
+
+        boat['loads'].remove({"id":load.id, "self": http + "/loads/" + str(load.id)})
+        boat_key = client.key(constants.loads, int(boat_id))
+        boat = client.get(key=boat_key)
+        # boat['load'] = None
+        client.put(load)    
+
+        print(load["carrier"]["id"])
+        boat_id = client.key(constants.boats, load["carrier"]["id"])
+        print(load["carrier"]["id"])
+
+        #delete the load
+        client.delete(load_key)
+        return ('',204)
     elif request.method == 'GET':
         load_key = client.key(constants.loads, int(id))
         #is the ID real?
