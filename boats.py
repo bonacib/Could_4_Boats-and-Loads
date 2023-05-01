@@ -156,12 +156,20 @@ def add_delete_reservation(bid,lid):
 @bp.route('/<id>/loads', methods=['GET'])
 def get_reservations(id):
     boat_key = client.key(constants.boats, int(id))
+    if client.get(key=boat_key) == None:
+            return (json.dumps({"Error" : "No boat with this boat_id exists"}), 404)
     boat = client.get(key=boat_key)
-    load_list  = []
-    if 'loads' in boat.keys():
-        for gid in boat['loads']:
-            load_key = client.key(constants.loads, int(gid))
-            load_list.append(load_key)
-        return json.dumps(client.get_multi(load_list))
-    else:
-        return json.dumps([])
+    load_ids  = []
+    for load in boat['loads']:
+        #get all the ids of the loads
+        load_ids.append(load["id"])
+    list_loads = []
+    for load_id in load_ids:
+        load_key = client.key(constants.loads, int(load_id))
+        load = client.get(key=load_key)
+        list_loads.append({"id": load["id"], "volume": load["volume"],  "item": load["item"], 
+                        "creation_date": load["creation_date"], "self": load["self"]})
+    print("load list length", len(list_loads))
+    #then with all the ids display the contents of the loads
+    return json.dumps(list_loads)
+    

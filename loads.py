@@ -74,20 +74,18 @@ def loads_put_delete(id):
         if client.get(key=load_key) == None:
             return (json.dumps({"Error" : "No load with this load_id exists"}), 404)
         load = client.get(key=load_key)
+        print("LOAD: check carrier ID matched BOAT ID", load)
 
         #remove load from boat
         boat_id = load["carrier"]["id"]
         print("Boat ID", boat_id)
 
-        boat['loads'].remove({"id":load.id, "self": http + "/loads/" + str(load.id)})
-        boat_key = client.key(constants.loads, int(boat_id))
+        boat_key = client.key(constants.boats, int(boat_id))
         boat = client.get(key=boat_key)
-        # boat['load'] = None
-        client.put(load)    
-
-        print(load["carrier"]["id"])
-        boat_id = client.key(constants.boats, load["carrier"]["id"])
-        print(load["carrier"]["id"])
+        print("the BOAT:", boat)
+        boat['loads'].remove({"id":load.id, "self": http + "/loads/" + str(id)})
+        print("the NEW BOAT: ", boat)
+        client.put(boat)    
 
         #delete the load
         client.delete(load_key)
