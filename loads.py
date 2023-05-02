@@ -44,10 +44,10 @@ def loads_get_post():
         query = client.query(kind=constants.loads)
         q_limit = int(request.args.get('limit', '3'))
         q_offset = int(request.args.get('offset', '0'))
-        g_iterator = query.fetch(limit= q_limit, offset=q_offset)
-        pages = g_iterator.pages
+        l_iterator = query.fetch(limit= q_limit, offset=q_offset)
+        pages = l_iterator.pages
         results = list(next(pages))
-        if g_iterator.next_page_token:
+        if l_iterator.next_page_token:
             next_offset = q_offset + q_limit
             next_url = request.base_url + "?limit=" + str(q_limit) + "&offset=" + str(next_offset)
         else:
