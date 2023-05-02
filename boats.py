@@ -34,7 +34,7 @@ def boats_get_post():
         return (json.dumps(boat_dict), 201)
     elif request.method == 'GET':
         query = client.query(kind=constants.boats)
-        q_limit = int(request.args.get('limit', '2'))
+        q_limit = int(request.args.get('limit', '3'))
         q_offset = int(request.args.get('offset', '0'))
         l_iterator = query.fetch(limit= q_limit, offset=q_offset)
         pages = l_iterator.pages
@@ -155,6 +155,7 @@ def add_delete_reservation(bid,lid):
 
 @bp.route('/<id>/loads', methods=['GET'])
 def get_reservations(id):
+    print("enter")
     boat_key = client.key(constants.boats, int(id))
     if client.get(key=boat_key) == None:
             return (json.dumps({"Error" : "No boat with this boat_id exists"}), 404)
@@ -165,11 +166,13 @@ def get_reservations(id):
         load_ids.append(load["id"])
     list_loads = []
     for load_id in load_ids:
+        print("Round: ", load_id)
         load_key = client.key(constants.loads, int(load_id))
         load = client.get(key=load_key)
         list_loads.append({"id": load["id"], "volume": load["volume"],  "item": load["item"], 
                         "creation_date": load["creation_date"], "self": load["self"]})
-    print("load list length", len(list_loads))
+    results_dict = {}
+    results_dict["loads"] = list_loads
     #then with all the ids display the contents of the loads
-    return json.dumps(list_loads)
+    return results_dict
     

@@ -39,10 +39,10 @@ def loads_get_post():
         print("dict", load_dict)
         
         return (json.dumps(load_dict), 201)
-    
+
     elif request.method == 'GET':
         query = client.query(kind=constants.loads)
-        q_limit = int(request.args.get('limit', '2'))
+        q_limit = int(request.args.get('limit', '3'))
         q_offset = int(request.args.get('offset', '0'))
         g_iterator = query.fetch(limit= q_limit, offset=q_offset)
         pages = g_iterator.pages
@@ -74,17 +74,13 @@ def loads_put_delete(id):
         if client.get(key=load_key) == None:
             return (json.dumps({"Error" : "No load with this load_id exists"}), 404)
         load = client.get(key=load_key)
-        print("LOAD: check carrier ID matched BOAT ID", load)
 
         #remove load from boat
         boat_id = load["carrier"]["id"]
-        print("Boat ID", boat_id)
 
         boat_key = client.key(constants.boats, int(boat_id))
         boat = client.get(key=boat_key)
-        print("the BOAT:", boat)
         boat['loads'].remove({"id":load.id, "self": http + "/loads/" + str(id)})
-        print("the NEW BOAT: ", boat)
         client.put(boat)    
 
         #delete the load
