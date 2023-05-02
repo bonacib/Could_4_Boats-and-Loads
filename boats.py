@@ -1,3 +1,6 @@
+#Bailey Bonaci
+#Code started from CLOUD APPLICATION DEVELOPMENT (CS_493_400_S2023) materials
+
 from flask import Blueprint, request
 from google.cloud import datastore
 import json
@@ -155,7 +158,6 @@ def add_delete_reservation(bid,lid):
 
 @bp.route('/<id>/loads', methods=['GET'])
 def get_reservations(id):
-    print("enter")
     boat_key = client.key(constants.boats, int(id))
     if client.get(key=boat_key) == None:
             return (json.dumps({"Error" : "No boat with this boat_id exists"}), 404)

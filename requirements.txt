@@ -1,2 +1,5 @@
+#Bailey Bonaci
+#Code started from CLOUD APPLICATION DEVELOPMENT (CS_493_400_S2023) materials
+
 Flask==2.2.2
 google-cloud-datastore==2.8.2
